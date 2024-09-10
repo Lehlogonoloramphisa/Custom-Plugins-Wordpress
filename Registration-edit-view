@@ -1,0 +1,946 @@
+<?php
+/*
+Plugin Name: Custom Registration and Profile Edit Form with Payment Options
+Plugin URI: https://example.com
+Description: A custom user registration form with payment options, additional fields, profile editing functionality, and conditional bank details for different payment options.
+Version: 1.2
+Author: Globaltech Solutions
+Author URI: https://example.com
+License: GPL2
+*/
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Enqueue custom scripts
+function crf_enqueue_scripts()
+{
+    wp_enqueue_script('jquery'); // Ensure jQuery is loaded
+}
+add_action('wp_enqueue_scripts', 'crf_enqueue_scripts');
+
+// Display the registration form
+function crf_display_registration_form()
+{
+    ob_start();
+    ?>
+    <div
+        style="border: 3px double #000; border-radius: 15px; padding: 20px; display: inline-block; background-color: #f0f0f0;">
+        <div class="crf-form">
+            <form method="post" action="">
+                <!-- Personal Information -->
+                <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                    <legend style="color: white; margin: 0;">COMPULSORY INFO REQUIRED</legend>
+                </div>
+                <div class="form-section">
+                    <p>
+                        <label for="first_name">First Name<span style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="first_name" id="first_name"
+                            value="<?php echo esc_attr($_POST['first_name'] ?? ''); ?>" required />
+                    </p>
+                    <p>
+                        <label for="surname">Surname<span style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="surname" id="surname"
+                            value="<?php echo esc_attr($_POST['surname'] ?? ''); ?>" required />
+                    </p>
+                    <p>
+                        <label for="username">Username<span style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="username" id="username"
+                            value="<?php echo esc_attr($_POST['username'] ?? ''); ?>" required />
+                        <small>Remember to save these details for future use.</small>
+                    </p>
+                    <p class="password-field">
+                        <label for="password">Password<span style="color: red; font-weight: bold;">*</span></label>
+                        <input type="password" name="password" id="password" required />
+                        <small>Enter a strong password.</small>
+                    </p>
+                    <p class="password-field">
+                        <label for="confirm-password">Confirm Password<span
+                                style="color: red; font-weight: bold;">*</span></label>
+                        <input type="password" name="confirm_password" id="confirm-password" required />
+                        <small>Re-enter your password for verification.</small>
+                    </p>
+                    <p>
+                        <label for="cell">Cell Number</label>
+                        <input type="text" name="cell" id="cell" value="<?php echo esc_attr($_POST['cell'] ?? ''); ?>" />
+                    </p>
+                    <p>
+                        <label for="email">Primary Email Address</label>
+                        <input type="email" name="email" id="email" value="<?php echo esc_attr($_POST['email'] ?? ''); ?>"
+                            required />
+                    </p>
+                    <p>
+                        <label>Do you want to hide your cell number from site visitors?</label>
+                        <label for="hide_cell_yes">
+                            <input type="radio" id="hide_cell_yes" name="hide_cell" value="yes"> Yes
+                        </label>
+                        <label for="hide_cell_no">
+                            <input type="radio" id="hide_cell_no" name="hide_cell" value="no" checked> No
+                        </label>
+                    </p>
+                </div>
+
+                <!-- Firm Details -->
+                <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                    <legend style="color: white; margin: 0;">Firm Details</legend>
+                </div>
+                <div class="form-section">
+                    <p>
+                        <label for="firm_name">Name of Firm</label>
+                        <input type="text" name="firm_name" id="firm_name"
+                            value="<?php echo esc_attr($_POST['firm_name'] ?? ''); ?>" required />
+                    </p>
+                    <p>
+                        <label for="postal_code">Postal Code</label>
+                        <input type="text" name="postal_code" id="postal_code"
+                            value="<?php echo esc_attr($_POST['postal_code'] ?? ''); ?>" required />
+                    </p>
+                    <p>
+                        <label for="suburb">Suburb of Firm</label>
+                        <input type="text" name="suburb" id="suburb" value="<?php echo esc_attr($_POST['suburb'] ?? ''); ?>"
+                            required />
+                    </p>
+                    <p>
+                        <label for="street_address">Street Address</label>
+                        <input type="text" name="street_address" id="street_address"
+                            value="<?php echo esc_attr($_POST['street_address'] ?? ''); ?>" required />
+                    </p>
+                </div>
+
+                <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                    <legend style="color: white; margin: 0;"> </legend>
+                </div><br><br>
+
+                <!-- Qualifications and Services -->
+                <div class="note">
+                    We wish to deliver highly targeted results, so please only include those services that you personally
+                    provide and wish to gain new clients in. You can always change your selection later. NB: Unless some
+                    services are selected, your results will not show up in the search.
+                </div><br><br>
+
+                <div class="form-section">
+                    <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                        <legend style="color: white; margin: 0;">Qualifications and Services</legend>
+                    </div><br><br>
+                    <label for="qualification">Qualifications</label>
+                    <input type="text" id="qualification" name="qualification"
+                        placeholder="Enter your qualifications"><br><br>
+
+                    <label for="focus">FOCUS (select option)</label>
+                    <select name="focus" id="focus">
+                        <option value="Financial Statements">Financial Statements</option>
+                        <option value="Monthly Accounting">Monthly Accounting</option>
+                        <option value="Bookkeeping">Bookkeeping</option>
+                        <option value="Payroll">Payroll</option>
+                        <option value="Company/Individual Tax">Company/Individual Tax</option>
+                        <option value="Auditing">Auditing</option>
+                        <option value="Business Plan">Business Plan</option>
+                        <option value="Company Registration">Company Registration</option>
+                    </select>
+                </div><br><br>
+
+                <div class="form-section">
+                    <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                        <legend style="color: white; margin: 0;">Other Services</legend>
+                    </div><br><br>
+                    <label for="other-services">OTHER SERVICES</label><br>
+                    <select name="other-services" id="other-services">
+                        <option value="Sage Business Cloud setup">Sage Business Cloud setup</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div><br><br>
+
+                <!-- Experience and Staff -->
+                <div class="form-section">
+                    <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                        <legend style="color: white; margin: 0;">Experience and Staff</legend>
+                    </div><br><br>
+                    <label for="experience">EXTENSIVE INDUSTRY EXPERIENCE</label>
+                    <select name="experience" id="experience">
+                        <option value="1 year">1 year</option>
+                        <option value="2 years">2 years</option>
+                        <option value="3 years">3 years</option>
+                        <option value="4 years">4 years</option>
+                        <option value="5 years">5 years</option>
+                        <option value="5 years+">5 years+</option>
+                    </select>
+
+                    <label for="staff">How many staff are there in your firm?</label>
+                    <select name="staff" id="staff">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3 - 5">3 - 5</option>
+                        <option value="6 - 10">6 - 10</option>
+                        <option value="11 - 20">11 - 20</option>
+                        <option value="21 - 50">21 - 50</option>
+                    </select>
+                </div><br><br>
+
+                <!-- Additional Information -->
+                <div class="form-section">
+                    <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                        <legend style="color: white; margin: 0;">Additional Information</legend>
+                    </div><br><br>
+                    <label for="services">SERVICES: General</label>
+                    <input type="text" id="services" name="services" placeholder="List your services">
+                    <br>
+                    <label for="languages">Languages</label>
+                    <input type="text" id="languages" name="languages" placeholder="Languages you speak">
+                    <br>
+                    <label for="other-members">Other members of your firm also listed on accountantslocator.co.za</label>
+                    <input type="text" id="other-members" name="other-members" placeholder="Other members listed">
+                    <br>
+                    <label for="software">Software Supported</label>
+                    <input type="text" id="software" name="software" placeholder="Software you support">
+                </div><br><br>
+
+                <div class="form-section">
+                    <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                        <legend style="color: white; margin: 0;">Fees and Source</legend>
+                    </div><br><br>
+                    <label for="fees">Average Hourly Fees</label>
+                    <select name="fees" id="fees">
+                        <option value="unknown">Unknown</option>
+                        <option value="< R300">
+                            < R300</option>
+                        <option value="R300 - R500">R300 - R500</option>
+                        <option value="R500 - R800">R500 - R800</option>
+                        <option value="R800 +">R800 +</option>
+                    </select>
+
+                    <label for="source">How did you find out about www.accountantslocator.co.za?</label>
+                    <select name="source" id="source">
+                        <option value="Google search results">Google search results</option>
+                        <option value="Other Search engine (not Google)">Other Search engine (not Google)</option>
+                        <option value="In response to an email">In response to an email</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Yellow Pages">Yellow Pages</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div><br><br>
+
+                <!-- Payment Options -->
+                <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                    <legend style="color: white; margin: 0;">PERSONAL PROFILE: Select a Payment Option</legend>
+                </div><br>
+                <div class="form-section">
+                    <p>
+                        <label for="payment_option">Select Payment Option</label>
+                        <select name="payment_option" id="payment_option" required>
+                            <option value="debit_order_monthly" <?php selected($_POST['payment_option'] ?? '', 'debit_order_monthly'); ?>>DEBIT ORDER R 130 per month</option>
+                            <option value="debit_order_yearly" <?php selected($_POST['payment_option'] ?? '', 'debit_order_yearly'); ?>>
+                                DEBIT ORDER R 1,248.00 for a year (20% discount)</option>
+                            <option value="credit_card_yearly" <?php selected($_POST['payment_option'] ?? '', 'credit_card_yearly'); ?>>
+                                CREDIT CARD R 1,248.00 for a year (20% discount)</option>
+                            <option value="instant_eft_yearly" <?php selected($_POST['payment_option'] ?? '', 'instant_eft_yearly'); ?>>
+                                INSTANT EFT (via PayFast) R 1,248.00 for a year (20% discount)
+                            </option>
+                            <option value="eft_yearly" <?php selected($_POST['payment_option'] ?? '', 'eft_yearly'); ?>>EFT
+                                (Direct Bank Deposit) R 1,248.00 for a year (20% discount)</option>
+                        </select>
+                    </p>
+                </div>
+
+                <!-- Conditional Bank Details -->
+                <fieldset id="payment_details" style="display: none;">
+                    <legend>Debit Order Bank Details</legend>
+                    <p>After submitting this form, your Annual Debit Order will be processed within 24 hours.</p>
+                    <p>
+                        <label for="bank">Bank <span style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="bank" id="bank" value="<?php echo esc_attr($_POST['bank'] ?? ''); ?>" />
+                    </p>
+                    <p>
+                        <label for="account_holder">Name of Account Holder <span
+                                style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="account_holder" id="account_holder"
+                            value="<?php echo esc_attr($_POST['account_holder'] ?? ''); ?>" />
+                    </p>
+                    <p>
+                        <label for="account_number">Account Number <span
+                                style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="account_number" id="account_number"
+                            value="<?php echo esc_attr($_POST['account_number'] ?? ''); ?>" />
+                    </p>
+                    <p>
+                        <label for="branch_code">Branch Code (6 digits) <span
+                                style="color: red; font-weight: bold;">*</span></label>
+                        <input type="text" name="branch_code" id="branch_code"
+                            value="<?php echo esc_attr($_POST['branch_code'] ?? ''); ?>" />
+                    </p>
+                    <p>
+                        <label for="account_type">Account Type <span style="color: red; font-weight: bold;">*</span></label>
+                        <select name="account_type" id="account_type">
+                            <option value="savings" <?php selected(get_user_meta($user_id, 'account_type', false), 'savings'); ?>>Select</option>
+                            <option value="savings" <?php selected($_POST['account_type'] ?? '', 'savings'); ?>>Savings
+                            </option>
+                            <option value="current" <?php selected($_POST['account_type'] ?? '', 'current'); ?>>Current
+                            </option>
+                        </select>
+                    </p>
+                </fieldset>
+
+                <fieldset id="eft_details" style="display: none;">
+                    <legend>EFT Bank Details</legend>
+                    <p>EFT (Electronic Funds Transfer): Please use the following details for direct bank deposit:</p>
+                    <p>
+                        <strong>Account Holder:</strong> Accountants Locator
+                        <br>
+                        <strong>Account Number:</strong>2265277750<br>
+                        <strong>Account Type:</strong>Savings<br>
+                        <strong>Branch Code:</strong>470010
+                        <br>
+                        <strong>Bank:</strong>Capitec Bank<br>
+                        <strong>Amount:</strong> R 1,248.00 for a year (20% discount)
+                    </p>
+                    <p>Please use your <strong>surname</strong> as the reference when making the payment.</p>
+                    <p>Once payment is complete, please email your proof of payment to
+                        <strong>info@accoutantslocator.co.za.</strong>
+                    </p>
+                </fieldset><br><br>
+
+                <!-- Submit Button -->
+                <p>
+                    <input type="submit" name="submit" value="Register"
+                        style="background-color: #081b36; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;" /><br><br>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        jQuery(document).ready(function ($) {
+            $('#payment_option').change(function () {
+                var paymentOption = $(this).val();
+
+                // Show/hide payment fields based on selected option
+                if (paymentOption === 'debit_order_monthly' || paymentOption === 'debit_order_yearly') {
+                    $('#payment_details').show();
+                    $('#eft_details').hide();
+                } else if (paymentOption === 'eft_yearly') {
+                    $('#payment_details').hide();
+                    $('#eft_details').show();
+                } else {
+                    $('#payment_details').hide();
+                    $('#eft_details').hide();
+                }
+            }).trigger('change');
+        });
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
+// Handle registration form submission
+function crf_handle_registration_form_submission()
+{
+    if (isset($_POST['submit'])) {
+        // Sanitize and validate user input
+        $first_name = sanitize_text_field($_POST['first_name']);
+        $surname = sanitize_text_field($_POST['surname']);
+        $username = sanitize_user($_POST['username']);
+        $password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
+        $email = sanitize_email($_POST['email']);
+        $cell = sanitize_text_field($_POST['cell']);
+        $hide_cell = sanitize_text_field($_POST['hide_cell']);
+
+        // Firm details
+        $firm_name = sanitize_text_field($_POST['firm_name']);
+        $postal_code = sanitize_text_field($_POST['postal_code']);
+        $suburb = sanitize_text_field($_POST['suburb']);
+        $street_address = sanitize_text_field($_POST['street_address']);
+
+        // Payment option
+        $payment_option = sanitize_text_field($_POST['payment_option']);
+
+        // Qualification details
+        $qualification = sanitize_text_field($_POST['qualification']);
+        $focus = sanitize_text_field($_POST['focus']);
+        $other_services = sanitize_text_field($_POST['other-services']);
+        $experience = sanitize_text_field($_POST['experience']);
+        $staff = sanitize_text_field($_POST['staff']);
+        $services = sanitize_text_field($_POST['services']);
+        $languages = sanitize_text_field($_POST['languages']);
+        $other_members = sanitize_text_field($_POST['other-members']);
+        $software = sanitize_text_field($_POST['software']);
+        $fees = sanitize_text_field($_POST['fees']);
+        $source = sanitize_text_field($_POST['source']);
+
+        // Check if passwords match
+        if ($password !== $confirm_password) {
+            echo '<p style="color: red;">Passwords do not match. Please try again.</p>';
+            return;
+        }
+
+        // Check if username already exists
+        if (username_exists($username)) {
+            echo '<p style="color: red;">Username already exists. Please choose another.</p>';
+            return;
+        }
+
+        // Create the user
+        $user_id = wp_create_user($username, $password, $email);
+
+        if (is_wp_error($user_id)) {
+            echo '<p style="color: red;">There was an error creating the user.</p>';
+        } else {
+            // Save additional user information
+            update_user_meta($user_id, 'first_name', $first_name);
+            update_user_meta($user_id, 'surname', $surname);
+            update_user_meta($user_id, 'cell', $cell);
+            update_user_meta($user_id, 'hide_cell', $hide_cell);
+            update_user_meta($user_id, 'firm_name', $firm_name);
+            update_user_meta($user_id, 'postal_code', $postal_code);
+            update_user_meta($user_id, 'suburb', $suburb);
+            update_user_meta($user_id, 'street_address', $street_address);
+
+            // Save qualification-related information
+            update_user_meta($user_id, 'qualification', $qualification);
+            update_user_meta($user_id, 'focus', $focus);
+            update_user_meta($user_id, 'other_services', $other_services);
+            update_user_meta($user_id, 'experience', $experience);
+            update_user_meta($user_id, 'staff', $staff);
+            update_user_meta($user_id, 'services', $services);
+            update_user_meta($user_id, 'languages', $languages);
+            update_user_meta($user_id, 'other_members', $other_members);
+            update_user_meta($user_id, 'software', $software);
+            update_user_meta($user_id, 'fees', $fees);
+            update_user_meta($user_id, 'source', $source);
+
+            // Log in the user automatically
+            $creds = array(
+                'user_login' => $username,
+                'user_password' => $password,
+                'remember' => true
+            );
+            $user = wp_signon($creds, false);
+
+            // Check if the selected payment option is PayFast
+            if ($payment_option === 'instant_eft_yearly') {
+                // PayFast integration details
+                $merchant_id = '10030457'; // Replace with your PayFast merchant ID
+                $merchant_key = 'babo764ac4gto'; // Replace with your PayFast merchant key
+                $return_url = 'https://accountantslocator.co.za/my-profile/'; // URL to return after successful payment
+                $cancel_url = 'https://accountantslocator.co.za/sign-up-as-an-accountant/'; // URL for canceled payment
+                $notify_url = 'https://accountantslocator.co.za/sign-up-as-an-accountant/'; // URL for payment notification
+                $amount = number_format(1248.00, 2, '.', ''); // PayFast amount (R 1,248.00)
+                $item_name = 'Annual Subscription (PayFast Instant EFT)';
+                $user_email = $email;
+
+                // PayFast payment URL
+                $payfast_url = "https://sandbox.payfast.co.za/eng/process?merchant_id={$merchant_id}&merchant_key={$merchant_key}&amount={$amount}&item_name={$item_name}&return_url={$return_url}&cancel_url={$cancel_url}&notify_url={$notify_url}&email_confirmation=1&confirmation_address={$user_email}";
+
+                // Redirect to PayFast for payment
+                wp_redirect($payfast_url);
+                exit(); // Stop further execution after the redirect
+            } else {
+                // Redirect the user to another page if the payment option is not PayFast
+                // wp_redirect('https://accountantslocator.co.za/form-2/');
+                wp_redirect('https://accountantslocator.co.za/my-profile/');
+                exit(); // Ensure no further code is executed after the redirect
+            }
+        }
+    }
+}
+add_action('template_redirect', 'crf_handle_registration_form_submission');
+
+// Display the profile edit form
+function crf_display_profile_edit_form()
+{
+    if (!is_user_logged_in()) {
+        return '<p>You need to be logged in to edit your profile.</p>';
+    }
+
+    $user_id = get_current_user_id();
+    $user_info = get_userdata($user_id);
+
+    // Get current profile picture and cover photo URLs
+    $profile_picture = get_user_meta($user_id, 'profile_picture', true);
+    $cover_photo = get_user_meta($user_id, 'cover_photo', true);
+
+    ob_start();
+    ?>
+    <div class="crf-profile">
+        <form method="post" action="" enctype="multipart/form-data">
+            <!-- Cover Photo Section -->
+            <div class="form-section" style="padding: 20px;">
+                <p style="margin-bottom: 10px;">
+                    <label for="cover_photo" style="display: block; margin-bottom: 5px;">Upload Cover Photo</label>
+                    <input type="file" name="cover_photo" id="cover_photo" style="width: 100%;" />
+                    <?php if ($cover_photo): ?>
+                    <p><img src="<?php echo esc_url($cover_photo); ?>" alt="Cover Photo"
+                            style="max-width: 100%; height: auto; margin-top: 10px; border-radius: 5px;" /></p>
+                <?php endif; ?>
+                </p>
+            </div>
+
+            <!-- Profile Picture Section -->
+            <div
+                style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0; border: 2px solid #081b36; border-radius: 5px;">
+                <legend style="color: white; margin: 0;">Profile Picture</legend>
+            </div>
+            <div class="form-section" style="padding: 20px;">
+                <p style="margin-bottom: 10px;">
+                    <label for="profile_picture" style="display: block; margin-bottom: 5px;">Upload Profile Picture</label>
+                    <input type="file" name="profile_picture" id="profile_picture" style="width: 100%;" />
+                    <?php if ($profile_picture): ?>
+                    <p><img src="<?php echo esc_url($profile_picture); ?>" alt="Profile Picture"
+                            style="max-width: 150px; height: auto; margin-top: 10px; border-radius: 5px;" /></p>
+                <?php endif; ?>
+                </p>
+            </div>
+
+
+            <!-- Personal Information -->
+            <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                <legend style="color: white; margin: 0;">COMPULSORY INFO REQUIRED</legend>
+            </div>
+            <div class="form-section">
+                <p>
+                    <label for="first_name">First Name<span style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="first_name" id="first_name"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'first_name', true)); ?>" required />
+                </p>
+                <p>
+                    <label for="surname">Surname<span style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="surname" id="surname"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'surname', true)); ?>" required />
+                </p>
+                <p>
+                    <label for="cell">Cell Number</label>
+                    <input type="text" name="cell" id="cell"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'cell', true)); ?>" />
+                </p>
+                <p>
+                    <label for="email">Primary Email Address</label>
+                    <input type="email" name="email" id="email" value="<?php echo esc_attr($user_info->user_email); ?>"
+                        required />
+                </p>
+                <p>
+                    <label>Do you want to hide your cell number from site visitors?</label>
+                    <label for="hide_cell_yes">
+                        <input type="radio" id="hide_cell_yes" name="hide_cell" value="yes" <?php checked(get_user_meta($user_id, 'hide_cell', true), 'yes'); ?>> Yes
+                    </label>
+                    <label for="hide_cell_no">
+                        <input type="radio" id="hide_cell_no" name="hide_cell" value="no" <?php checked(get_user_meta($user_id, 'hide_cell', true), 'no'); ?>> No
+                    </label>
+                </p>
+            </div>
+
+            <!-- Firm Details -->
+            <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                <legend style="color: white; margin: 0;">Firm Details</legend>
+            </div>
+            <div class="form-section">
+                <p>
+                    <label for="firm_name">Name of Firm</label>
+                    <input type="text" name="firm_name" id="firm_name"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'firm_name', true)); ?>" />
+                </p>
+                <p>
+                    <label for="postal_code">Postal Code</label>
+                    <input type="text" name="postal_code" id="postal_code"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'postal_code', true)); ?>" />
+                </p>
+                <p>
+                    <label for="suburb">Suburb of Firm</label>
+                    <input type="text" name="suburb" id="suburb"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'suburb', true)); ?>" />
+                </p>
+                <p>
+                    <label for="street_address">Street Address</label>
+                    <input type="text" name="street_address" id="street_address"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'street_address', true)); ?>" />
+                </p>
+            </div>
+
+            <!-- Payment Options -->
+            <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+                <legend style="color: white; margin: 0;">PERSONAL PROFILE: Select a Payment Option</legend>
+            </div>
+            <div class="form-section">
+                <p>
+                    <label for="payment_option">Select Payment Option</label>
+                    <select name="payment_option" id="payment_option" required>
+                        <option value="debit_order_monthly" <?php selected(get_user_meta($user_id, 'payment_option', true), 'debit_order_monthly'); ?>>DEBIT ORDER R 130 per month</option>
+                        <option value="debit_order_yearly" <?php selected(get_user_meta($user_id, 'payment_option', true), 'debit_order_yearly'); ?>>DEBIT ORDER R 1,248.00 for a year (20% discount)</option>
+                        <option value="credit_card_yearly" <?php selected(get_user_meta($user_id, 'payment_option', true), 'credit_card_yearly'); ?>>CREDIT CARD R 1,248.00 for a year (20% discount)</option>
+                        <option value="instant_eft_yearly" <?php selected(get_user_meta($user_id, 'payment_option', true), 'instant_eft_yearly'); ?>>INSTANT EFT (via PayFast) R 1,248.00 for a year (20% discount)
+                        </option>
+                        <option value="eft_yearly" <?php selected(get_user_meta($user_id, 'payment_option', true), 'eft_yearly'); ?>>EFT (Direct Bank Deposit) R 1,248.00 for a year (20% discount)</option>
+                    </select>
+                </p>
+            </div>
+
+            <!-- Conditional Bank Details -->
+            <fieldset id="payment_details" style="display: none;">
+                <legend>Debit Order Bank Details</legend>
+                <p>After submitting this form, your Annual Debit Order will be processed within 24 hours.</p>
+                <p>
+                    <label for="bank">Bank <span style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="bank" id="bank"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'bank', true)); ?>" />
+                </p>
+                <p>
+                    <label for="account_holder">Name of Account Holder <span
+                            style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="account_holder" id="account_holder"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'account_holder', true)); ?>" />
+                </p>
+                <p>
+                    <label for="account_number">Account Number <span style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="account_number" id="account_number"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'account_number', true)); ?>" />
+                </p>
+                <p>
+                    <label for="branch_code">Branch Code (6 digits) <span
+                            style="color: red; font-weight: bold;">*</span></label>
+                    <input type="text" name="branch_code" id="branch_code"
+                        value="<?php echo esc_attr(get_user_meta($user_id, 'branch_code', true)); ?>" />
+                </p>
+                <p>
+                    <label for="account_type">Account Type <span style="color: red; font-weight: bold;">*</span></label>
+                    <select name="account_type" id="account_type">
+                        <option value="savings" <?php selected(get_user_meta($user_id, 'account_type', false), 'savings'); ?>>Select</option>
+                        <option value="savings" <?php selected(get_user_meta($user_id, 'account_type', true), 'savings'); ?>>Savings</option>
+                        <option value="current" <?php selected(get_user_meta($user_id, 'account_type', true), 'current'); ?>>Current</option>
+                    </select>
+                </p>
+            </fieldset>
+
+            <fieldset id="eft_details" style="display: none;">
+                <legend>EFT Bank Details</legend>
+                <p>EFT (Electronic Funds Transfer): Please use the following details for direct bank deposit:</p>
+                <p>
+                    <strong>Account Holder:</strong> Find a Professional<br>
+                    <strong>Account Number:</strong> 62063948718<br>
+                    <strong>Branch Code:</strong> 250655<br>
+                    <strong>Bank:</strong> FNB<br>
+                    <strong>Amount:</strong> R 1,248.00 for a year (20% discount)
+                </p>
+                <p>Please use your <strong>surname</strong> as the reference when making the payment.</p>
+                <p>Once payment is complete, please email your proof of payment to admin@findaprofessional.co.za.</p>
+            </fieldset>
+
+            <p>
+                <input type="submit" name="submit_profile_edit" value="Update Profile" style="background-color: #081b36; color: white; padding: 12px 24px; font-size: 16px; 
+    border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    transition: background-color 0.3s ease, transform 0.3s ease;"
+                    onmouseover="this.style.backgroundColor='#04246f'; this.style.transform='translateY(-2px)';"
+                    onmouseout="this.style.backgroundColor='#04186f'; this.style.transform='translateY(0px)';" />
+            </p>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        jQuery(document).ready(function ($) {
+            $('#payment_option').change(function () {
+                var paymentOption = $(this).val();
+
+                // Show/hide payment fields based on selected option
+                if (paymentOption === 'debit_order_monthly' || paymentOption === 'debit_order_yearly') {
+                    $('#payment_details').show();
+                    $('#eft_details').hide();
+                } else if (paymentOption === 'eft_yearly') {
+                    $('#payment_details').hide();
+                    $('#eft_details').show();
+                } else {
+                    $('#payment_details').hide();
+                    $('#eft_details').hide();
+                }
+            }).trigger('change');
+        });
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
+// Handle profile edit form submission
+function crf_handle_profile_edit_form_submission()
+{
+    if (isset($_POST['submit_profile_edit']) && is_user_logged_in()) {
+        $user_id = get_current_user_id();
+
+        // Handle file uploads
+        if (!empty($_FILES['profile_picture']['name'])) {
+            $upload_dir = wp_upload_dir();
+            $upload_file = $upload_dir['path'] . '/' . basename($_FILES['profile_picture']['name']);
+            move_uploaded_file($_FILES['profile_picture']['tmp_name'], $upload_file);
+            $profile_picture_url = $upload_dir['url'] . '/' . basename($_FILES['profile_picture']['name']);
+            update_user_meta($user_id, 'profile_picture', esc_url($profile_picture_url));
+        }
+
+        if (!empty($_FILES['cover_photo']['name'])) {
+            $upload_dir = wp_upload_dir();
+            $upload_file = $upload_dir['path'] . '/' . basename($_FILES['cover_photo']['name']);
+            move_uploaded_file($_FILES['cover_photo']['tmp_name'], $upload_file);
+            $cover_photo_url = $upload_dir['url'] . '/' . basename($_FILES['cover_photo']['name']);
+            update_user_meta($user_id, 'cover_photo', esc_url($cover_photo_url));
+        }
+
+        // Sanitize user input
+        $first_name = sanitize_text_field($_POST['first_name']);
+        $surname = sanitize_text_field($_POST['surname']);
+        $cell = sanitize_text_field($_POST['cell']);
+        $email = sanitize_email($_POST['email']);
+        $payment_option = sanitize_text_field($_POST['payment_option']);
+        $bank = sanitize_text_field($_POST['bank']);
+        $account_holder = sanitize_text_field($_POST['account_holder']);
+        $account_number = sanitize_text_field($_POST['account_number']);
+        $branch_code = sanitize_text_field($_POST['branch_code']);
+        $account_type = sanitize_text_field($_POST['account_type']);
+        $hide_cell = sanitize_text_field($_POST['hide_cell']);
+
+        // Update user information
+        wp_update_user(array(
+            'ID' => $user_id,
+            'user_email' => $email
+        ));
+
+        update_user_meta($user_id, 'first_name', $first_name);
+        update_user_meta($user_id, 'surname', $surname);
+        update_user_meta($user_id, 'cell', $cell);
+        update_user_meta($user_id, 'hide_cell', $hide_cell);
+        update_user_meta($user_id, 'firm_name', sanitize_text_field($_POST['firm_name']));
+        update_user_meta($user_id, 'postal_code', sanitize_text_field($_POST['postal_code']));
+        update_user_meta($user_id, 'suburb', sanitize_text_field($_POST['suburb']));
+        update_user_meta($user_id, 'street_address', sanitize_text_field($_POST['street_address']));
+        update_user_meta($user_id, 'payment_option', $payment_option);
+        update_user_meta($user_id, 'bank', $bank);
+        update_user_meta($user_id, 'account_holder', $account_holder);
+        update_user_meta($user_id, 'account_number', $account_number);
+        update_user_meta($user_id, 'branch_code', $branch_code);
+        update_user_meta($user_id, 'account_type', $account_type);
+
+        // Redirect after successful update to profile page
+        wp_redirect(site_url('/my-profile/')); // Redirect to your profile page
+    }
+}
+add_action('template_redirect', 'crf_handle_profile_edit_form_submission');
+
+// Display the user profile
+// // Display the user profile
+// Display the user profile
+function crf_display_user_profile()
+{
+    if (!is_user_logged_in()) {
+        wp_redirect(wp_login_url());
+        exit;
+    }
+
+    $current_user = wp_get_current_user();
+
+    $first_name = get_user_meta($current_user->ID, 'first_name', true);
+    $surname = get_user_meta($current_user->ID, 'surname', true);
+    $cell = get_user_meta($current_user->ID, 'cell', true);
+    $email = $current_user->user_email;
+    $firm_name = get_user_meta($current_user->ID, 'firm_name', true);
+    $postal_code = get_user_meta($current_user->ID, 'postal_code', true);
+    $suburb = get_user_meta($current_user->ID, 'suburb', true);
+    $street_address = get_user_meta($current_user->ID, 'street_address', true);
+    $payment_option = get_user_meta($current_user->ID, 'payment_option', true);
+    $hide_cell = get_user_meta($current_user->ID, 'hide_cell', true);
+    $profile_picture = get_user_meta($current_user->ID, 'profile_picture', true);
+    $cover_photo = get_user_meta($current_user->ID, 'cover_photo', true);
+    $qualification = get_user_meta($current_user->ID, 'qualification', true);
+
+    ob_start();
+    ?>
+    <div class="crf-profile">
+        <!-- Cover Photo -->
+        <?php if ($cover_photo): ?>
+            <div class="cover-photo"
+                style="background-image: url('<?php echo esc_url($cover_photo); ?>'); background-size: cover; background-position: center; height: 300px; width: 100%; margin-bottom: 20px; border-radius: 8px;">
+            </div>
+        <?php endif; ?>
+
+        <!-- Profile Picture -->
+        <div class="profile-picture-container" style="text-align: center; 
+        <?php if (!$cover_photo): ?>
+                    margin-top: 10vh; /* 20% of viewport height */
+            <?php else: ?>
+                    margin-top: -100px;
+            <?php endif; ?>
+            margin-bottom: 20px;">
+            <?php if ($profile_picture): ?>
+                <img src="<?php echo esc_url($profile_picture); ?>" alt="Profile Picture"
+                    style="width: 150px; height: 150px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);" />
+            <?php else: ?>
+                <div
+                    style="width: 150px; height: 150px; border-radius: 50%; background-color: #ccc; border: 3px solid #fff; margin: 0 auto; box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);">
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <br>
+        <p style="text-align: center;"><a href="<?php echo esc_url(site_url('/profile-page')); ?>"
+                style="background-color: #081b36; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;" />Edit
+            Profile</a></p><br>
+
+        <!-- Profile Details in Table -->
+        <div style="background-color: #081b36; padding: 20px 0; text-align: center; width: 100%; margin: 0;">
+            <legend style="color: white; margin: 0;">Profile Details</legend>
+        </div>
+        <table
+            style="width: 100%; border-collapse: collapse; margin-top: 20px; border: 2px solid #ccc; border-radius: 5px;">
+            <tbody>
+                <!-- Label column gets the border-right on every row -->
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;"><strong>First
+                            Name</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($first_name); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;">
+                        <strong>Surname</strong>
+                    </td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($surname); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;">
+                        <strong>Email</strong>
+                    </td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($email); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;"><strong>Cell
+                            Number</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                        <?php echo esc_html($hide_cell == 'yes' ? 'Hidden' : esc_html($cell)); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;"><strong>Name of
+                            Firm</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($firm_name); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;"><strong>Suburb
+                            of
+                            Firm</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($suburb); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;"><strong>Street
+                            Address</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($street_address); ?></td>
+                </tr>
+                <?php if ($qualification): // Only display this row if qualification exists ?>
+                    <tr>
+                        <td style="padding: 10px; border-right: 2px solid #ddd; border-bottom: 1px solid #ddd;">
+                            <strong>Qualification</strong>
+                        </td>
+                        <td style="padding: 10px; border-bottom: 1px solid #ddd;"><?php echo esc_html($qualification); ?></td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+    </div><br><br>
+    <?php
+    return ob_get_clean();
+}
+// Display all registered users with profile pictures
+function crf_display_all_members()
+{
+    // Check if the current user is logged in
+    if (!is_user_logged_in()) {
+        return '<p>You must be logged in to view this page.</p>';
+    }
+
+    // Check if the user is an administrator
+    if (!current_user_can('administrator')) {
+        return '<p>Only administrators can view all members.</p>';
+    }
+
+    // Get all users
+    $args = array(
+        'role__in' => array('subscriber', 'customer', 'administrator'), // Modify roles if necessary
+    );
+    $users = get_users($args);
+
+    ob_start();
+
+    if (!empty($users)) {
+        ?>
+        <div class="crf-members-list">
+            <h2>All Registered Accountants</h2>
+            <table border="1" cellpadding="10" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Profile Picture</th>
+                        <th>Username</th>
+                        <th>First Name</th>
+                        <th>Surname</th>
+                        <th>Email</th>
+                        <th>Firm Name</th>
+                        <th>Postal Code</th>
+                        <th>Payment Option</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Loop through each user and display their info
+                    foreach ($users as $user) {
+                        $first_name = get_user_meta($user->ID, 'first_name', true);
+                        $surname = get_user_meta($user->ID, 'surname', true);
+                        $firm_name = get_user_meta($user->ID, 'firm_name', true);
+                        $postal_code = get_user_meta($user->ID, 'postal_code', true);
+                        $payment_option = get_user_meta($user->ID, 'payment_option', true);
+                        $avatar = get_avatar($user->ID, 64); // Get the profile picture (Gravatar by default, size 64px)
+                        ?>
+                        <tr>
+                            <td><?php echo $avatar; ?></td>
+                            <td><?php echo esc_html($user->user_login); ?></td>
+                            <td><?php echo esc_html($first_name); ?></td>
+                            <td><?php echo esc_html($surname); ?></td>
+                            <td><?php echo esc_html($user->user_email); ?></td>
+                            <td><?php echo esc_html($firm_name); ?></td>
+                            <td><?php echo esc_html($postal_code); ?></td>
+                            <td><?php echo esc_html($payment_option); ?></td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div><br><br>
+        <?php
+    } else {
+        echo '<p>No members found.</p>';
+    }
+
+    return ob_get_clean();
+}
+
+// Shortcode to display all members with profile pictures
+function crf_all_members_shortcode()
+{
+    return crf_display_all_members();
+}
+add_shortcode('custom_all_members', 'crf_all_members_shortcode');
+// Shortcode for viewing the profile
+function crf_profile_view_shortcode()
+{
+    ob_start();
+    echo crf_display_user_profile();
+    return ob_get_clean();
+}
+add_shortcode('custom_profile_view', 'crf_profile_view_shortcode');// Shortcodes for displaying forms
+function crf_registration_shortcode()
+{
+    ob_start();
+    echo crf_display_registration_form();
+    return ob_get_clean();
+}
+add_shortcode('custom_registration_form', 'crf_registration_shortcode');
+
+function crf_profile_edit_shortcode()
+{
+    ob_start();
+    echo crf_display_profile_edit_form();
+    return ob_get_clean();
+}
+add_shortcode('custom_profile_edit_form', 'crf_profile_edit_shortcode');
